@@ -129,7 +129,7 @@ with left:
         title="How did launch activity change over time?",
         labels={"year": "Launch year", "missions": "Mission records"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with right:
     vehicle_counts = (
@@ -143,7 +143,7 @@ with right:
         title="Which vehicle families appear most often?",
         labels={"vehicle_family": "Vehicle family", "missions": "Mission records"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 left, right = st.columns(2)
 with left:
@@ -158,7 +158,7 @@ with left:
         title="What mission applications dominate the data?",
         labels={"application": "Application", "missions": "Mission records"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with right:
     outcome_counts = filtered["outcome"].value_counts().rename_axis("outcome").reset_index(name="missions")
@@ -169,7 +169,7 @@ with right:
         title="What were the recorded mission outcomes?",
         hole=0.42,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 st.subheader("Orbit and reliability analysis")
 left, right = st.columns(2)
@@ -183,12 +183,12 @@ with left:
         title="Which orbit types are represented?",
         labels={"orbit_type": "Orbit type", "missions": "Mission records"},
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with right:
     reliability = (
         filtered.assign(success=filtered["outcome"].eq("Successful"))
-        .groupby("vehicle_family", as_index=False)["success"]
+        .groupby("vehicle_family")["success"]
         .agg(["mean", "size"])
         .reset_index()
     )
@@ -204,7 +204,7 @@ with right:
         range_y=[0, 100],
     )
     fig.update_traces(texttemplate="n=%{text}", textposition="outside")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 st.subheader("Questions answered by the dashboard")
 st.markdown(
@@ -229,7 +229,7 @@ display_columns = [
     "outcome",
     "remarks",
 ]
-st.dataframe(filtered[display_columns], use_container_width=True, hide_index=True)
+st.dataframe(filtered[display_columns], width="stretch", hide_index=True)
 
 st.download_button(
     "Download filtered data as CSV",
