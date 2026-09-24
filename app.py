@@ -4,7 +4,6 @@ Run locally with: streamlit run app.py
 """
 
 from pathlib import Path
-import re
 
 import pandas as pd
 import plotly.express as px
@@ -13,7 +12,30 @@ import streamlit as st
 
 st.set_page_config(page_title="ISRO Launch Analytics", page_icon="🚀", layout="wide")
 
-DATA_PATH = Path(__file__).parent / "data" / "ISRO_mission_launches.csv"
+DATA_DIR = Path(__file__).parent / "data"
+# The dataset was committed to the repo as "ISRO mission launches.csv" (with
+# spaces), but the app was written expecting "ISRO_mission_launches.csv"
+# (with underscores). That mismatch causes a FileNotFoundError on every
+# deployment target (Streamlit Cloud, Render, etc.), since the container's
+# filesystem is case- and character-sensitive just like the repo.
+#
+# Fix: rename the file in the repo to the underscore form (recommended —
+# see README) so this simple path works everywhere:
+DATA_PATH = DATA_DIR / "ISRO_mission_launches.csv"
+
+
+def _resolve_data_path() -> Path:
+    """Fall back to the space-separated filename if the renamed file isn't
+    present yet, so the app still runs even before the repo rename lands."""
+    if DATA_PATH.exists():
+        return DATA_PATH
+    legacy_path = DATA_DIR / "ISRO mission launches.csv"
+    if legacy_path.exists():
+        return legacy_path
+    raise FileNotFoundError(
+        f"Could not find the dataset in {DATA_DIR}. Expected "
+        f"'{DATA_PATH.name}' (or the legacy '{legacy_path.name}')."
+    )
 
 
 @st.cache_data
@@ -59,7 +81,7 @@ def success_rate(frame: pd.DataFrame) -> float:
     return 100 * frame["outcome"].eq("Successful").mean() if len(frame) else 0.0
 
 
-df = load_data(DATA_PATH)
+df = load_data(_resolve_data_path())
 
 st.title("🚀 ISRO Mission Launch Analytics")
 st.caption(
@@ -215,4 +237,3 @@ st.download_button(
     file_name="filtered_isro_launch_records.csv",
     mime="text/csv",
 )
-
